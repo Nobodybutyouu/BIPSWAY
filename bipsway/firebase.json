@@ -1,0 +1,32 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "bipsway-bipsu-campus",
+          "appId": "1:722937993390:android:4396d4fbb987390980353f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "bipsway-bipsu-campus",
+          "configurations": {
+            "android": "1:722937993390:android:4396d4fbb987390980353f",
+            "ios": "1:722937993390:ios:874a9ad735603dd880353f",
+            "macos": "1:722937993390:ios:874a9ad735603dd880353f",
+            "web": "1:722937993390:web:1166a612e7df6b5780353f",
+            "windows": "1:722937993390:web:8ba319bf4799f67180353f"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
