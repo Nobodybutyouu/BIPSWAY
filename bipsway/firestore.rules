@@ -1,0 +1,124 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.role == 'admin'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isNavigator() {
+      return signedIn()
+        && (
+          request.auth.token.role == 'navigator'
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'navigator'
+        );
+    }
+
+    function isActiveUser(uid) {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(uid)).data.status == 'active';
+    }
+
+    function isOtherUser(uid) {
+      return isAdmin() && request.auth.uid != uid;
+    }
+
+    match /users/{uid} {
+      allow create: if isSelf(uid)
+        && request.resource.data.role == 'navigator'
+        && request.resource.data.status == 'active';
+      // Self-profile reads remain available only so the app can show the
+      // required disabled-account message; content and nested data require
+      // an active profile below.
+      allow read: if isSelf(uid) || isAdmin();
+      allow update: if (
+          isSelf(uid)
+          && isActiveUser(uid)
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.status == resource.data.status
+        ) || (
+          isOtherUser(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status in ['active', 'disabled']
+        );
+      allow delete: if isOtherUser(uid);
+
+      match /searchHistory/{historyId} {
+        allow read, write: if (isSelf(uid) && isActiveUser(uid)) || isOtherUser(uid);
+      }
+    }
+
+    match /buildings/{buildingId} {
+      allow read: if isActiveUser(request.auth.uid);
+      allow write: if isAdmin();
+      match /floors/{floorId} {
+        allow read: if isActiveUser(request.auth.uid);
+        allow write: if isAdmin();
+      }
+    }
+
+    match /rooms/{roomId} {
+      allow read: if isActiveUser(request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read: if isActiveUser(request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /orgChart/{positionId} {
+      allow read: if isActiveUser(request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /personnel/{personnelId} {
+      allow read: if isActiveUser(request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isActiveUser(request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /reports/{reportId} {
+      allow create: if isNavigator()
+        && isActiveUser(request.auth.uid)
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin() || (isActiveUser(request.auth.uid) && resource.data.userId == request.auth.uid);
+      allow update: if isAdmin() && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readByAdmin'])
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userId', 'username'])
+          && !request.resource.data.keys().hasAny(['userId', 'username'])
+        )
+      );
+      allow delete: if false;
+    }
+
+    match /deleteRequests/{requestId} {
+      allow create: if isNavigator()
+        && isActiveUser(request.auth.uid)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow read: if isAdmin()
+        || (isActiveUser(request.auth.uid) && resource.data.userId == request.auth.uid);
+      allow update: if isAdmin()
+        && request.resource.data.status in ['approved', 'declined']
+        && request.resource.data.decidedBy == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'decidedAt', 'decidedBy']);
+      allow delete: if false;
+    }
+  }
+}

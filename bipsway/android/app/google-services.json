@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722937993390",
+    "project_id": "bipsway-bipsu-campus",
+    "storage_bucket": "bipsway-bipsu-campus.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722937993390:android:4396d4fbb987390980353f",
+        "android_client_info": {
+          "package_name": "com.example.bipsway"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCed2U2F01ZN3NMArCO7asOt1mXKFyd69I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
