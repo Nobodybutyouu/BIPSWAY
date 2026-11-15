@@ -71,14 +71,6 @@ class AuthService {
     String? purpose,
   }) async {
     final normalizedUsername = username.trim().toLowerCase();
-    final existing = await _firestore
-        .collection('users')
-        .where('usernameLower', isEqualTo: normalizedUsername)
-        .limit(1)
-        .get();
-    if (existing.docs.isNotEmpty) {
-      throw const AuthServiceException('That username is already in use.');
-    }
 
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
@@ -105,7 +97,44 @@ class AuthService {
         saveSearchHistory: true,
         createdAt: DateTime.now(),
       );
-      await _firestore.collection('users').doc(user.uid).set(profile.toFirestore());
+
+      // A new user is authenticated only after createUser succeeds. Reserve
+      // the username in the same batch as the profile so sign-up does not
+      // need an unauthenticated query of the users collection.
+      try {
+        final batch = _firestore.batch();
+        batch.set(
+          _firestore.collection('users').doc(user.uid),
+          profile.toFirestore(),
+        );
+        // This is intentionally a set: the rules allow the operation only
+        // when this reservation document does not already exist.
+        batch.set(
+          _firestore.collection('usernames').doc(normalizedUsername),
+          {
+            'uid': user.uid,
+            'username': username.trim(),
+            'usernameLower': normalizedUsername,
+          },
+        );
+        await batch.commit();
+      } on FirebaseException catch (error) {
+        // Avoid leaving an Auth account behind when the profile or username
+        // reservation cannot be created.
+        try {
+          await user.delete();
+        } catch (_) {
+          // Rollback can fail if the Auth session has expired; the original
+          // Firestore error is still more useful to the caller.
+        }
+        if (error.code == 'already-exists' ||
+            error.code == 'permission-denied') {
+          throw const AuthServiceException('That username is already in use.');
+        }
+        throw AuthServiceException(
+          error.message ?? 'Unable to create the account profile.',
+        );
+      }
       await user.sendEmailVerification();
       return profile;
     } on FirebaseAuthException catch (error) {
