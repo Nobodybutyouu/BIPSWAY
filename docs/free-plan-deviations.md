@@ -36,6 +36,14 @@ used, and no `functions/` folder should be created.
   configured unsigned upload preset, after client-side compression.
 - Image URLs, not base64 image data, are stored in Firestore.
 
+## Maps
+
+- Google Maps was not used because billing verification is unavailable.
+- The app uses `flutter_map` with OpenStreetMap tiles and `latlong2` instead.
+- The default BiPSU campus center is approximate (`11.5640, 124.4000`) and must
+  be verified against the official campus coordinates.
+- No Google Maps API keys or Google Maps Android/iOS setup are required.
+
 ## Deployment commands
 
 Do not run deployment automatically. After reviewing the rules and indexes,

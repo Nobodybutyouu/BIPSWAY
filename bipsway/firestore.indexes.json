@@ -10,6 +10,14 @@
       ]
     },
     {
+      "collectionGroup": "rooms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "buildingId", "order": "ASCENDING"},
+        {"fieldPath": "nameLower", "order": "ASCENDING"}
+      ]
+    },
+    {
       "collectionGroup": "events",
       "queryScope": "COLLECTION",
       "fields": [
@@ -40,6 +48,14 @@
       "fields": [
         {"fieldPath": "status", "order": "ASCENDING"},
         {"fieldPath": "requestedAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "orgChart",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "department", "order": "ASCENDING"},
+        {"fieldPath": "positionTitle", "order": "ASCENDING"}
       ]
     }
   ],

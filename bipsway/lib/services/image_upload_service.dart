@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,7 +18,13 @@ class CloudinaryImageUploadService implements ImageUploadService {
   Future<String> uploadImage(File file, String path) async {
     final compressed = await FlutterImageCompress.compressWithFile(
       file.absolute.path,
-      quality: 85,
+      // Large phone/emulator images are unnecessarily expensive to upload.
+      // The original dimensions are read separately for floor-plan pin math;
+      // this only controls the Cloudinary copy.
+      minWidth: 1600,
+      minHeight: 1600,
+      quality: 80,
+      inSampleSize: 2,
       format: CompressFormat.jpeg,
     );
     final bytes = compressed ?? await file.readAsBytes();
@@ -33,7 +40,12 @@ class CloudinaryImageUploadService implements ImageUploadService {
         filename: '${DateTime.now().millisecondsSinceEpoch}.jpg',
       ));
 
-    final response = await request.send();
+    final response = await request.send().timeout(
+      const Duration(minutes: 2),
+      onTimeout: () => throw const ImageUploadException(
+        'Image upload timed out. Check the emulator internet connection and try again.',
+      ),
+    );
     final body = await response.stream.bytesToString();
     final data = jsonDecode(body) as Map<String, dynamic>;
     if (response.statusCode < 200 || response.statusCode >= 300) {

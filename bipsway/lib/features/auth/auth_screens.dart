@@ -219,7 +219,19 @@ class AuthFrame extends StatelessWidget {
         body: SafeArea(child: Center(child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.map_outlined, size: 64),
+            Image.asset(
+              'assets/images/bipsway_logo.png',
+              width: 180,
+              fit: BoxFit.contain,
+              semanticLabel: 'Bipsway logo',
+              errorBuilder: (context, error, stackTrace) => Semantics(
+                label: 'Bipsway logo',
+                child: Text(
+                  'Bipsway',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             if (title != null) ...[Text(title!, style: Theme.of(context).textTheme.headlineSmall), const SizedBox(height: 24)],
             child,
